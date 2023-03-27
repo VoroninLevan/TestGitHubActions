@@ -1,0 +1,72 @@
+# Environments demo below
+
+# Name tage
+name: GitHub CI CD pipeline
+
+# When to run below:
+on:
+  push:
+    branches: [ main ]
+  pull request:
+    branches: [ main ]
+  workflow_dispatch:
+
+# Jobs:
+
+jobs:
+  # Build job
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Code_scanning
+        run: echo Here is code scan
+      - name: Compile
+        run: echo Here is code compile
+      - name: Test
+        run: echo Here is code test
+      - name: ChecksComplete
+        run: echo Here checks complete
+
+  # Define deploy below
+  DeployDev:
+    name: Deploy to develop
+    # Runs only on pull request
+    if: github.event_name == 'pull_request'
+    # Job runs only if Build - successful
+    needs: [ Build ]
+    runs-on: ubuntu-latest
+    # Define env vars
+    environment:
+      # The env name MUST match the env in repo
+      name: Development
+      url: 'http//dev/myapp.com'
+    steps:
+      - name: Deploy
+        run: echo Here is Deploy onto url
+
+  # Deploy onto Stage
+  DeployStaging:
+    name: Deploy to staging
+    # Runs only if
+    if: github.event.ref == 'refs/head/main'
+    needs: [ Build ]
+    runs-on: ubuntu-latest
+    environment:
+      name: Staging
+      url: 'http//test/myapp.com'
+    steps:
+      - name: Deploy
+        run: echo Here is Deploy on staging
+
+  # Deploy onto Prod
+  DeployProduction:
+    name: Deploy to production
+    needs: [ DeployStaging ]
+    runs-on: ubuntu-latest
+    environment:
+      name: Production
+      url: 'http//myapp.com'
+    steps:
+      - name: Deploy
+        run: echo Here is Deploy on staging
